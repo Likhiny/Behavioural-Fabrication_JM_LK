@@ -27,7 +27,9 @@ class CartAttract(abm.Behavior.BehaviorBase):
 
             anchors = []
             for neighbor in neighbors:
-                if neighbor.CustomData['name'][0] != cartesianAgent.CustomData['name'][0] and neighbor.CustomData['name'][1] == 'B' and neighbor.CustomData['docking'] == 'empty':
+                if neighbor.CustomData['name'][0] != cartesianAgent.CustomData['name'][0]\
+                 and neighbor.CustomData['name'][1] == 'B'\
+                 and neighbor.CustomData['docking'] == 'empty':
                         #Rhino.RhinoApp.WriteLine(neighbor.CustomData['name'])
                         anchors.append(neighbor)
                         
@@ -35,7 +37,17 @@ class CartAttract(abm.Behavior.BehaviorBase):
 
             if len(anchors) > 0:
                 closestAnchor = min(anchors, key=lambda anchor: (cartesianAgent.Position - anchor.Position).Length)
-                moveTowards = closestAnchor.Position - cartesianAgent.Position
+                # find partner of anchor
+                memberDirection = rg.Vector3d(0.0, 0.0, 0.0)
+                for agent in system.Agents:
+                    if agent.CustomData['name'][0] == closestAnchor.CustomData['name'][0]\
+                     and agent.CustomData['name'][1] != closestAnchor.CustomData['name'][1]:
+                        memberDirection = agent.Position - closestAnchor.Position
+                        memberDirection.Unitize()
+                    else:
+                        pass
+
+                moveTowards = closestAnchor.Position + closestAnchor.CustomData['e'] * memberDirection - cartesianAgent.Position
                 length = moveTowards.Length
                 moveTowards.Unitize()
                 moveTowards = (self.Step * (0.1 + length) * moveTowards)
@@ -49,8 +61,17 @@ class CartAttract(abm.Behavior.BehaviorBase):
 
             for neighbor in neighbors:
                 if neighbor.CustomData['name'] == cartesianAgent.CustomData['docking']:
-                        #Rhino.RhinoApp.WriteLine(neighbor.CustomData['name'])
-                        moveTowards = neighbor.Position - cartesianAgent.Position
+                        Rhino.RhinoApp.WriteLine(neighbor.CustomData['name'])
+                        memberDirection = rg.Vector3d(0.0, 0.0, 0.0)
+                        for agent in system.Agents:
+                            if agent.CustomData['name'][0] == neighbor.CustomData['name'][0]\
+                             and agent.CustomData['name'][1] != neighbor.CustomData['name'][1]:
+                                memberDirection = agent.Position - neighbor.Position
+                                memberDirection.Unitize()
+                            else:
+                                pass
+                        
+                        moveTowards = neighbor.Position + neighbor.CustomData['e'] * memberDirection - cartesianAgent.Position
                         length = moveTowards.Length
                         moveTowards.Unitize()
                         moveTowards = (self.Step * (0.1 + length) * moveTowards)
